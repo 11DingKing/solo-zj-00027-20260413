@@ -1,0 +1,85 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// TODO: This file should be refactored to decouple the file management logic from the API calls, and to handle errors more robustly.
+export function useFileManager() {
+  const uploadError = ref(false);
+
+  async function deleteImage(imageId: string) {
+    if (!imageId) {
+      return;
+    }
+
+    try {
+      return del(`/content/images/${imageId}`, { withoutAuth: false });
+    } catch (error) {
+      void error;
+    }
+  }
+
+  const defaultImageUrls = computed(() => {
+    const colorMode = useColorMode();
+    const imageColor = colorMode.value === "light" ? "light" : "dark";
+    return [
+      `${GET_ACTIVE_IMAGE_URL}_${imageColor}.png`,
+      `${GET_ORGANIZED_IMAGE_URL}_${imageColor}.png`,
+      `${GROW_ORGANIZATION_IMAGE_URL}_${imageColor}.png`,
+    ];
+  });
+
+  function getIconImage(files: File[]) {
+    if (files[0]) {
+      return new UploadableFile(files[0]);
+    }
+    return new Error("No file provided to upload.");
+  }
+
+  function handleAddFiles(newFiles: File[], files: FileUploadMix[]) {
+    const allowedTypes = ["image/jpeg", "image/png"];
+    const validFiles = [...newFiles].filter((file) =>
+      allowedTypes.includes(file.type)
+    );
+    const newUploadableFiles = validFiles
+      .map((file, index) => ({
+        type: "upload",
+        data: new UploadableFile(file),
+        sequence: index + files.length,
+      }))
+      .filter((file) => !fileExists(file.data.id, files)) as FileUploadMix[];
+
+    return [...files, ...newUploadableFiles];
+  }
+
+  function fileExists(otherId: string, files: FileUploadMix[]) {
+    return files.some((file: FileUploadMix) => file.data.id === otherId);
+  }
+
+  async function removeFile(
+    files: FileUploadMix[],
+    file: UploadableFile | ContentImage
+  ) {
+    if (file instanceof UploadableFile) {
+      const index = files.findIndex(
+        (f) => f.type === "upload" && f.data === file
+      );
+      if (index > -1) {
+        files.splice(index, 1);
+      }
+    } else {
+      const index = files.findIndex(
+        (f) => f.type === "file" && f.data.id === file.id
+      );
+      await deleteImage(file.id);
+      if (index > -1) {
+        files.splice(index, 1);
+      }
+    }
+  }
+
+  return {
+    uploadError,
+    defaultImageUrls,
+    deleteImage,
+    handleAddFiles,
+    removeFile,
+    getIconImage,
+  };
+}

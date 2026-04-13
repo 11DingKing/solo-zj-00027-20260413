@@ -1,0 +1,402 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+"""
+Serializers for organizations in the communities app.
+"""
+
+import logging
+from typing import Any
+from uuid import UUID
+
+from django.db import IntegrityError, OperationalError, transaction
+from rest_framework import serializers
+
+from communities.groups.serializers import GroupSerializer
+from communities.organizations.models import (
+    Organization,
+    OrganizationApplication,
+    OrganizationFaq,
+    OrganizationFlag,
+    OrganizationImage,
+    OrganizationMember,
+    OrganizationResource,
+    OrganizationSocialLink,
+    OrganizationTask,
+    OrganizationText,
+)
+from content.models import Location, Topic
+from content.serializers import ImageSerializer, LocationSerializer, TopicSerializer
+from events.serializers import EventSerializer
+
+logger = logging.getLogger(__name__)
+
+# MARK: FAQ
+
+
+class OrganizationFaqSerializer(serializers.ModelSerializer[OrganizationFaq]):
+    """
+    Serializer for OrganizationFaq model data.
+    """
+
+    class Meta:
+        model = OrganizationFaq
+        fields = "__all__"
+
+    def validate_org(self, value: Organization | UUID | str) -> Organization:
+        """
+        Validate that the organization exists.
+
+        Parameters
+        ----------
+        value : Organization | UUID | str
+            The value to validate: an Organization instance, UUID, or string id.
+
+        Returns
+        -------
+        Organization
+            The validated Organization instance.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the organization does not exist.
+        """
+        if isinstance(value, Organization):
+            return value
+
+        try:
+            org = Organization.objects.get(id=value)
+            logger.info("Organization found for value: %s", value)
+
+        except Organization.DoesNotExist as e:
+            raise serializers.ValidationError("Organization not found.") from e
+
+        return org
+
+
+# MARK: Resource
+
+
+class OrganizationResourceSerializer(serializers.ModelSerializer[OrganizationResource]):
+    """
+    Serializer for OrganizationResource model data.
+    """
+
+    topics = serializers.SlugRelatedField(
+        queryset=Topic.objects.filter(active=True),
+        many=True,
+        slug_field="type",
+        required=False,
+        allow_null=True,
+    )
+
+    class Meta:
+        model = OrganizationResource
+        fields = "__all__"
+        read_only_fields = ["created_by"]
+
+    def validate_org(self, value: Organization | UUID | str) -> Organization:
+        """
+        Validate that the organization exists.
+
+        Parameters
+        ----------
+        value : Organization | UUID | str
+            The value to validate: an Organization instance, UUID, or string id.
+
+        Returns
+        -------
+        Organization
+            The validated Organization instance.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the organization does not exist.
+        """
+        if isinstance(value, Organization):
+            return value
+
+        try:
+            org = Organization.objects.get(id=value)
+            logger.info("Organization found for value: %s", value)
+
+        except Organization.DoesNotExist as e:
+            raise serializers.ValidationError("Organization not found.") from e
+
+        return org
+
+
+# MARK: Social Link
+
+
+class OrganizationSocialLinkSerializer(
+    serializers.ModelSerializer[OrganizationSocialLink]
+):
+    """
+    Serializer for OrganizationSocialLink model data.
+    """
+
+    class Meta:
+        model = OrganizationSocialLink
+        fields = "__all__"
+
+    def validate_org(self, value: Organization | UUID | str) -> Organization:
+        """
+        Validate that the organization exists.
+
+        Parameters
+        ----------
+        value : Organization | UUID | str
+            The value to validate: an Organization instance, UUID, or string id.
+
+        Returns
+        -------
+        Organization
+            The validated Organization instance.
+
+        Raises
+        ------
+        serializers.ValidationError
+            If the organization does not exist.
+        """
+        if isinstance(value, Organization):
+            return value
+
+        try:
+            org = Organization.objects.get(id=value)
+            logger.info("Organization found for value: %s", value)
+
+        except Organization.DoesNotExist as e:
+            raise serializers.ValidationError("Organization not found.") from e
+
+        return org
+
+
+# MARK: Text
+
+
+class OrganizationTextSerializer(serializers.ModelSerializer[OrganizationText]):
+    """
+    Serializer for OrganizationText model data.
+    """
+
+    class Meta:
+        model = OrganizationText
+        fields = "__all__"
+
+
+# MARK: Organization
+
+
+class OrganizationPOSTSerializer(serializers.Serializer[Organization]):
+    """
+    Serializer for Organization model data on POST requests.
+    """
+
+    name = serializers.CharField(max_length=255)
+    tagline = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    description = serializers.CharField(max_length=2500)
+    topics = TopicSerializer(many=True, required=False)
+    country_code = serializers.CharField(max_length=3, default="en")
+    city = serializers.CharField(max_length=255)
+
+    def validate(self, data: dict[str, Any]) -> dict[str, Any]:
+        """
+        Validate the data being posted.
+
+        Parameters
+        ----------
+        data : dict[str, Any]
+            The data to be posted.
+
+        Returns
+        -------
+        dict[str, Any]
+            Validated data after validation completes.
+        """
+        return data
+
+    def create(self, validated_data: dict[str, Any]) -> Organization:
+        """
+        Create an organization via a post operation.
+
+        Parameters
+        ----------
+        validated_data : dict[str, Any]
+            Data to be used in the creation of an organization.
+
+        Returns
+        -------
+        Organization
+            The organization object that was created in the database.
+        """
+        with transaction.atomic():
+            city = validated_data.pop("city")
+            country_code = validated_data.pop("country_code")
+            description = validated_data.pop("description", "")
+            # iso = validated_data.pop("iso")
+
+            location_data = {
+                "city": city,
+                "country_code": country_code,
+                "lat": "",
+                "lon": "",
+            }
+            location = Location.objects.create(**location_data)
+
+            try:
+                org = Organization.objects.create(location=location, **validated_data)
+
+                org_text = OrganizationText.objects.create(
+                    org=org,
+                    # iso=iso,
+                    primary=True,
+                    description=description,
+                )
+                org.texts.set([org_text])
+
+                logger.info("Created Organization with id: %s", org.id)
+
+                return org
+
+            except (IntegrityError, OperationalError) as e:
+                location.delete()
+                raise e
+
+
+class OrganizationSerializer(serializers.ModelSerializer[Organization]):
+    """
+    Serializer for Organization model data.
+    """
+
+    texts = OrganizationTextSerializer(many=True, read_only=True)
+    social_links = OrganizationSocialLinkSerializer(many=True, read_only=True)
+    location = LocationSerializer()
+    resources = OrganizationResourceSerializer(many=True, read_only=True)
+    faq_entries = OrganizationFaqSerializer(source="faqs", many=True, read_only=True)
+    groups = GroupSerializer(many=True, read_only=True)
+    events = EventSerializer(many=True, read_only=True)
+
+    icon_url = ImageSerializer(required=False)
+
+    class Meta:
+        model = Organization
+
+        extra_kwargs = {
+            "created_by": {"read_only": True},
+            "status_updated": {"read_only": True},
+            "acceptance_date": {"read_only": True},
+        }
+
+        fields = "__all__"
+
+    def validate(self, data: dict[str, Any]) -> dict[str, Any]:
+        """
+        Ensure terms are accepted before creation.
+
+        Parameters
+        ----------
+        data : dict[str, Any]
+            Data from a request to validate.
+
+        Returns
+        -------
+        dict[str, Any]
+            Validated data for processing.
+        """
+        if data.get("terms_checked") is False:
+            raise serializers.ValidationError(
+                "You must accept the terms of service to create an organization."
+            )
+
+        return data
+
+    def create(self, validated_data: dict[str, Any]) -> Organization:
+        """
+        Create and return a new Organization instance.
+
+        Parameters
+        ----------
+        validated_data : dict[str, Any]
+            Validate data.
+
+        Returns
+        -------
+        Organization
+            A new  Organization instance.
+        """
+        org = Organization.objects.create(**validated_data)
+        logger.info("Created Organization with id: %s", org.id)
+
+        if org:
+            OrganizationText.objects.create(org=org)
+            logger.info("Created OrganizationText for Organization id: %s", org.id)
+
+        return org
+
+
+# MARK: Flag
+
+
+class OrganizationFlagSerializer(serializers.ModelSerializer[OrganizationFlag]):
+    """
+    Serializers for OrganizationFlag Model.
+    """
+
+    class Meta:
+        model = OrganizationFlag
+        fields = "__all__"
+
+
+# MARK: Application
+
+
+class OrganizationApplicationSerializer(
+    serializers.ModelSerializer[OrganizationApplication]
+):
+    """
+    Serializer for OrganizationApplication model data.
+    """
+
+    class Meta:
+        model = OrganizationApplication
+        fields = "__all__"
+
+
+# MARK: Image
+
+
+class OrganizationImageSerializer(serializers.ModelSerializer[OrganizationImage]):
+    """
+    Serializer for OrganizationImage model data.
+    """
+
+    class Meta:
+        model = OrganizationImage
+        fields = "__all__"
+
+
+# MARK: Member
+
+
+class OrganizationMemberSerializer(serializers.ModelSerializer[OrganizationMember]):
+    """
+    Serializer for OrganizationMember model data.
+    """
+
+    class Meta:
+        model = OrganizationMember
+        fields = "__all__"
+
+
+# MARK: Task
+
+
+class OrganizationTaskSerializer(serializers.ModelSerializer[OrganizationTask]):
+    """
+    Serializer for OrganizationTask model data.
+    """
+
+    class Meta:
+        model = OrganizationTask
+        fields = "__all__"

@@ -1,0 +1,235 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+"""
+Models for the communities app.
+"""
+
+from typing import Any
+from uuid import uuid4
+
+from django.db import models
+
+from authentication import enums
+from content.models import Faq, Resource, SocialLink, Text
+
+# MARK: Organization
+
+
+class Organization(models.Model):
+    """
+    General organization class with all base parameters.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    created_by = models.ForeignKey(
+        "authentication.UserModel",
+        related_name="created_org",
+        on_delete=models.CASCADE,
+    )
+    description = models.CharField(max_length=2500, blank=True, default="")
+    name = models.CharField(max_length=255)
+    tagline = models.CharField(max_length=255, blank=True)
+    icon_url = models.ForeignKey(
+        "content.Image", on_delete=models.CASCADE, blank=True, null=True
+    )
+    location = models.OneToOneField(
+        "content.Location", on_delete=models.CASCADE, null=False, blank=False
+    )
+    terms_checked = models.BooleanField(default=False)
+    is_high_risk = models.BooleanField(default=False)
+    status = models.ForeignKey(
+        "StatusType",
+        on_delete=models.CASCADE,
+        default=enums.StatusTypes.PENDING.value,
+        blank=True,
+        null=True,
+    )
+    status_updated = models.DateTimeField(auto_now=True, null=True)
+    acceptance_date = models.DateTimeField(blank=True, null=True)
+    deletion_date = models.DateTimeField(blank=True, null=True)
+
+    topics = models.ManyToManyField("content.Topic", blank=True)
+
+    discussions = models.ManyToManyField("content.Discussion", blank=True)
+
+    # Explicit type annotation required for mypy compatibility with django-stubs.
+    flags: Any = models.ManyToManyField(
+        "authentication.UserModel",
+        through="OrganizationFlag",
+    )
+
+    def __str__(self) -> str:
+        return self.name
+
+
+# MARK: Application
+
+
+class OrganizationApplication(models.Model):
+    """
+    Class covering the application of an organization to join the platform.
+    """
+
+    org = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="application"
+    )
+    status = models.ForeignKey(
+        "StatusType", on_delete=models.CASCADE, blank=True, null=True
+    )
+    orgs_in_favor = models.ManyToManyField(
+        "communities.Organization", related_name="in_favor", blank=True
+    )
+    orgs_against = models.ManyToManyField(
+        "communities.Organization", related_name="against", blank=True
+    )
+    creation_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return str(self.creation_date)
+
+
+class OrganizationApplicationStatus(models.Model):
+    """
+    Class handling the status of an organization application.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    status_name = models.CharField(max_length=255)
+
+    def __str__(self) -> str:
+        return self.status_name
+
+
+# MARK: FAQ
+
+
+class OrganizationFaq(Faq):
+    """
+    Organization Frequently Asked Questions model.
+    """
+
+    org = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="faqs")
+
+    def __str__(self) -> str:
+        return self.question
+
+    class Meta:
+        ordering = ["order"]
+
+
+# MARK: Flag
+
+
+class OrganizationFlag(models.Model):
+    """
+    Model for flagged organizations.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    org = models.ForeignKey("communities.Organization", on_delete=models.CASCADE)
+    created_by = models.ForeignKey("authentication.UserModel", on_delete=models.CASCADE)
+    creation_date = models.DateTimeField(auto_now=True)
+
+
+# MARK: Image
+
+
+class OrganizationImage(models.Model):
+    """
+    Class for adding image parameters to organizations.
+    """
+
+    org = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    image = models.ForeignKey("content.Image", on_delete=models.CASCADE)
+    sequence_index = models.IntegerField()
+
+    def __str__(self) -> str:
+        return str(self.id)
+
+
+# MARK: Member
+
+
+class OrganizationMember(models.Model):
+    """
+    Class for adding user membership parameters to organizations.
+    """
+
+    org = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    user = models.ForeignKey("authentication.UserModel", on_delete=models.CASCADE)
+    is_owner = models.BooleanField(default=False)
+    is_admin = models.BooleanField(default=False)
+    is_comms = models.BooleanField(default=False)
+
+    def __str__(self) -> str:
+        return str(self.id)
+
+
+# MARK: Resource
+
+
+class OrganizationResource(Resource):
+    """
+    Organization resource model.
+    """
+
+    org = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="resources"
+    )
+
+    def __str__(self) -> str:
+        return self.name
+
+    class Meta:
+        ordering = ["order"]
+
+
+# MARK: Social Link
+
+
+class OrganizationSocialLink(SocialLink):
+    """
+    Class for adding social link parameters to organizations.
+    """
+
+    org = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, null=True, related_name="social_links"
+    )
+
+    class Meta:
+        ordering = ["order"]
+
+
+# MARK: Task
+
+
+class OrganizationTask(models.Model):
+    """
+    Class for adding task parameters to organizations.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    org = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    task = models.ForeignKey("content.Task", on_delete=models.CASCADE)
+    group = models.ForeignKey(
+        "Group", on_delete=models.CASCADE, blank=True, null=True, related_name="groups"
+    )
+
+    def __str__(self) -> str:
+        return str(self.id)
+
+
+# MARK: Text
+
+
+class OrganizationText(Text):
+    """
+    Class for adding text parameters to organizations.
+    """
+
+    org = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, null=True, related_name="texts"
+    )
+    donate_prompt = models.TextField(max_length=500, blank=True)
+
+    def __str__(self) -> str:
+        return f"{self.org} - {self.iso}"

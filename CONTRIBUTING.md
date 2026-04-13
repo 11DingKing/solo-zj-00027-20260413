@@ -1,0 +1,918 @@
+<a id="top"></a>
+
+# Contributing to activist.org
+
+Thank you for contributing to activist!
+
+Please take a moment to review this document in order to make the contribution process easy and effective for everyone involved.
+
+Following this guide helps to communicate that you respect the time of the developers managing and developing this open-source project. In return, and in accordance with this project's [code of conduct](.github/CODE_OF_CONDUCT.md), other contributors will reciprocate that respect in addressing your issue or assessing patches and features.
+
+If you have questions or would like to communicate with the team, please [join us in our public Matrix chat rooms](https://matrix.to/#/#activist_community:matrix.org). We'd be happy to hear from you!
+
+## Contents
+
+- [First steps as a contributor](#first-steps-as-a-contributor)
+- [Mentorship and growth](#mentorship-and-growth)
+- [Tech stack](#tech-stack)
+- [Learning the tech stack](#learning-the-tech-stack)
+- [Development environment](#development-environment)
+- [Style guide](#style-guide)
+- [Linting](#linting)
+- [Testing](#testing)
+- [Issues and projects](#issues-and-projects)
+- [Bug reports](#bug-reports)
+- [Feature requests](#feature-requests)
+- [Pull requests](#pull-requests)
+- [Internationalization](#internationalization)
+- [Documentation](#documentation)
+- [Accessibility](#accessibility)
+- [Design](#design)
+- [Troubleshooting](#troubleshooting)
+
+## First steps as a contributor
+
+Thank you for your interest in contributing to activist.org! We look forward to welcoming you to the community and working with you to build a global platform for political action :) The following are some suggested steps for people interested in joining our community:
+
+- Please join the [public Matrix chat](https://matrix.to/#/#activist_community:matrix.org) to connect with the community
+    - [Matrix](https://matrix.org/) is a network for secure, decentralized communication
+    - We'd suggest that you use the [Element](https://element.io/) client and [Element X](https://element.io/app) for a mobile app
+    - The [General](https://matrix.to/#/!uIGQUxlCnEzrPiRsRw:matrix.org?via=matrix.org&via=effektio.org&via=acter.global) and [Development](https://matrix.to/#/!CRgLpGeOBNwxYCtqmK:matrix.org?via=matrix.org&via=acter.global&via=chat.0x7cd.xyz) channels would be great places to start!
+    - Feel free to introduce yourself and tell us what your interests are if you're comfortable :)
+- Read through this contributing guide and the [style guide](STYLEGUIDE.md) for all the information you need to contribute
+- Look into issues marked [`good first issue`](https://github.com/activist-org/activist/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) and the [Projects board](https://github.com/orgs/activist-org/projects/1) to get a better understanding of what you can work on
+- Check out our [public designs on Figma](https://www.figma.com/file/I9McFfaLu1RiiWp5IP3YjE/activist_public_designs?type=design&node-id=10%3A18&mode=design&t=tdQyOtl5lU1n7oLN-1) to understand activist's goals and direction
+- Consider joining our bi-weekly developer sync — new joiners are always welcome!
+
+<sub><a href="#top">Back to top.</a></sub>
+
+## Mentorship and growth
+
+Onboarding and mentoring new members are integral parts of any healthy open-source community. We need those who are onboarded to gain new skills and take on greater roles of triaging issues, reviewing contributions and maintaining the project. We also need them to help those who follow do the same. Please let us know if you have such goals and we'll work with you to achieve them.
+
+The above includes expectations on the behavior of those who want to grow with us. Mentorship is earned, not given. To be blunt, those who are mainly sending AI generated contributions are not demonstrating an interest in growing their skills and are not helping to develop the project. This is not to say that all uses of AI for contributions are bad, but it should be a tool, not the contributor itself.
+
+Continued constructive contributions, new open issues and communication that provides context for maintainers help them do their work immensely. We would be happy to help such community members expand their skills and take on further responsibilities.
+
+If the above resonates with you, then we look forward to working with you!
+
+<sub><a href="#top">Back to top.</a></sub>
+
+## Tech stack
+
+The following are the current and planned technologies for [activist.org](https://activist.org):
+
+### Frontend
+
+- [Nuxt.js](https://nuxt.com) • [Vue.js](https://vuejs.org) • [TypeScript](https://www.typescriptlang.org) • [Tailwind CSS](https://tailwindcss.com) • [Headless UI](https://headlessui.com)
+
+### Backend
+
+- [Django](https://www.djangoproject.com) • [FastAPI](https://fastapi.tiangolo.com/) (services) • [PostgreSQL](https://www.postgresql.org)
+
+### Deployment
+
+- [Docker](https://www.docker.com) • [Netlify](https://www.netlify.com)
+
+### Deployment
+
+[pytest](https://docs.pytest.org/en/stable/) (backend) • [Vitest](https://vitest.dev/) (frontend) • [Playwright](https://playwright.dev/) (end to end)
+
+### Localization
+
+- [Nuxt I18n](https://github.com/nuxt-modules/i18n) • [Weblate](https://weblate.org) ([activist on Weblate](https://hosted.weblate.org/projects/activist/activist))
+
+### Analytics
+
+- [Plausible](https://plausible.io/)
+
+> [!NOTE]
+> Those new to any frameworks or technologies who want to work on their skills are more than welcome to contribute!
+
+<sub><a href="#top">Back to top.</a></sub>
+
+## Learning the tech stack
+
+activist is very open to contributions from people in the early stages of their coding journey! The following is a select list of documentation pages to help you understand the technologies we use.
+
+<details><summary>Docs for those new to programming</summary>
+<p>
+
+- [Mozilla Developer Network Learning Area](https://developer.mozilla.org/en-US/docs/Learn)
+    - Doing MDN sections for HTML, CSS and JavaScript is the best ways to get into web development!
+- [Open Source Guides](https://opensource.guide/)
+    - Guides from GitHub about open-source software including how to start and much more!
+
+</p>
+</details>
+
+<details><summary>Frontend tech docs</summary>
+<p>
+
+- [Vue.js 3 docs](https://vuejs.org/guide/introduction.html)
+- [Vue docs on MDN](https://developer.mozilla.org/en-US/docs/Learn/Tools_and_testing/Client-side_JavaScript_frameworks/Vue_getting_started)
+- [Nuxt.js 3 docs](https://nuxt.com/docs/getting-started/introduction)
+- [Nuxt.js and TypeScript docs](https://nuxt.com/docs/guide/concepts/typescript)
+- [TypeScript docs](https://www.typescriptlang.org/docs/)
+- [Tailwind CSS docs](https://tailwindcss.com/docs/installation)
+- [Headless UI docs](https://headlessui.com/)
+
+</p>
+</details>
+
+<details><summary>Backend tech docs</summary>
+<p>
+
+- [Django docs](https://docs.djangoproject.com/)
+- [Django docs on MDN](https://developer.mozilla.org/en-US/docs/Learn/Server-side/Django)
+
+</p>
+</details>
+
+<details><summary>Deployment tech docs</summary>
+<p>
+
+- [Docker docs](https://docs.docker.com/get-started/)
+
+</p>
+</details>
+
+<sub><a href="#top">Back to top.</a></sub>
+
+## Development environment
+
+> [!NOTE]
+> Windows users should be aware that Docker development requires [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/windows/wsl/) version 2 or higher. The community would suggest that you clone the repository directly into your WSL environment.
+
+1. First and foremost, please see the suggested IDE setup in the dropdown below to make sure that your editor is ready for development.
+
+> [!IMPORTANT]
+>
+> <details><summary>Suggested IDE setup</summary>
+>
+> <p>
+>
+> VS Code
+>
+> Install the following extensions:
+>
+> - [batisteo.vscode-django](https://marketplace.visualstudio.com/items?itemName=batisteo.vscode-django)
+> - [bradlc.vscode-tailwindcss](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss)
+> - [charliermarsh.ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff)
+> - [esbenp.prettier-vscode](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+> - [ms-playwright.playwright](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright)
+> - [streetsidesoftware.code-spell-checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker)
+> - [Vue.volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+>
+> WebStorm
+>
+> - Check out the [Vue.js development docs](https://www.jetbrains.com/help/webstorm/vue-js.html)
+> - Make sure a [local Node.js interpreter](https://www.jetbrains.com/help/webstorm/developing-node-js-applications.html#ws_node_configure_local_node_interpreter) is configured in your project
+> - Make sure the [Vue.js plugin](https://github.com/JetBrains/intellij-plugins/tree/master/vuejs) and [JavaScript Debugger](https://www.jetbrains.com/help/webstorm/configuring-javascript-debugger.html) are enabled in the plugins page of the settings
+>
+> </p>
+> </details>
+
+2. To setup your development environment, first install [Docker](https://docs.docker.com/install/) and [Docker Compose](https://docs.docker.com/compose/).
+
+> [!NOTE]
+> If you are new to Docker, activist recommends installing [Docker Desktop](https://docs.docker.com/desktop/). Docker Desktop comes with many Docker tools and a straightforward user interface.
+
+3. [Fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo) the [activist repo](https://github.com/activist-org/activist), clone your fork, and configure the remotes:
+
+> [!NOTE]
+>
+> <details><summary>Consider using SSH</summary>
+>
+> <p>
+>
+> Alternatively to using HTTPS as in the instructions below, consider SSH to interact with GitHub from the terminal. SSH allows you to connect without a user-pass authentication flow.
+>
+> To run git commands with SSH, remember then to substitute the HTTPS URL, `https://github.com/...`, with the SSH one, `git@github.com:...`.
+>
+> - e.g. Cloning now becomes `git clone git@github.com:<your-username>/activist.git`
+>
+> GitHub also has their documentation on how to [Generate a new SSH key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) 🔑
+>
+> </p>
+> </details>
+
+```bash
+# Clone your fork of the repo into the current directory.
+git clone https://github.com/<your-username>/activist.git
+# Navigate to the newly cloned directory.
+cd activist
+# Assign the original repo to a remote called "upstream".
+git remote add upstream https://github.com/activist-org/activist.git
+```
+
+- Now, if you run `git remote -v` you should see two remote repositories named:
+  - `origin` (forked repository)
+  - `upstream` (activist repository)
+
+> [!NOTE]
+> First, install `uv` if you don't already have it by following the [official installation guide](https://docs.astral.sh/uv/getting-started/installation/).
+
+4. Create a virtual environment for the backend (Python `>=3.12`), activate it and install dependencies:
+
+    ```bash
+    cd backend && uv sync --all-extras  # create .venv and install all dependencies from uv.lock
+
+    # Unix or macOS:
+    source .venv/bin/activate
+
+    # Windows:
+    .venv\Scripts\activate.bat  # .venv\Scripts\activate.ps1 (PowerShell)
+    ```
+
+5. Start your docker images with the following:
+
+    ```bash
+    # --build only necessary with new dependencies or backend model changes.
+    docker compose --env-file .env.dev up --build
+
+    # And to stop the containers when you're done working:
+    docker compose --env-file .env.dev down
+    ```
+
+6. You can visit <http://localhost:3000/> to see the development frontend once the container is up and running. From there click `View organizations` or `View events` to explore the platform.
+
+7. To view the backend admin UI and Swagger UI, visit <http://localhost:8000/admin> and <http://localhost:8000/v1/schema/swagger-ui/> respectively.
+
+8. If you'd like to sign in to the frontend via <http://localhost:3000/auth/sign-in> or the Django admin panel via <http://localhost:8000/admin>, then you can use the fixtures `admin` user with the password `admin`.
+
+> [!NOTE]
+> Feel free to contact the team in the [Development room on Matrix](https://matrix.to/#/!CRgLpGeOBNwxYCtqmK:matrix.org?via=matrix.org&via=acter.global&via=chat.0x7cd.xyz) if you're having problems getting your environment setup!
+
+### Using Yarn or Python
+
+Dockerized environments are resource intensive - specifically for some Windows users - and may take a very long time to load. If you would like to get just the frontend or backend up and running, please follow the steps below:
+
+<details><summary><strong>Frontend: Yarn</strong></summary>
+<p>
+
+The frontend currently uses [Yarn 4.*](https://yarnpkg.com/getting-started/install).
+
+```bash
+# In the root activist directory:
+cd frontend
+
+# Set the environment variables:
+set -a && source ../.env.dev && set +a
+
+# Install corepack on your machine globally:
+npm install -g corepack
+
+# Install and run the project:
+corepack enable
+yarn install
+yarn run dev:local
+```
+
+You can then visit http://localhost:3000/ to see the development frontend build once the server is up and running.
+
+You can also build the production version locally:
+
+```bash
+# In activist/frontend:
+yarn build:local
+
+# Run the production build:
+node .output/server/index.mjs
+```
+
+</p>
+</details>
+
+<details><summary><strong>Backend: Python</strong></summary>
+<p>
+
+Our backend depends on a connection to a postgres DB, therefore we need to setup the database first. Here our best option is to still use docker to create a postgres DB with the following command:
+
+```bash
+docker compose --env-file .env.dev up db
+```
+
+To run locally, set the environment variable `DJANGO_ENV` to `LOCAL_DEV`:
+
+```bash
+export DJANGO_ENV=LOCAL_DEV
+```
+
+When this is set, django will load environment variables from `env.dev` first, and then from `.env.dev.local` which will overwrite some variables for local development.
+
+From here we need the project's dependencies, with the practice being to create a virtual environment first within your local activist directory and then install the dependencies within it:
+
+On Unix or MacOS, run:
+
+```bash
+cd backend && uv sync --all-extras  # create .venv and install all dependencies from uv.lock
+
+# Unix or macOS:
+source .venv/bin/activate
+
+# Windows:
+.venv\Scripts\activate.bat  # .venv\Scripts\activate.ps1 (PowerShell)
+```
+
+Now you can apply the database migrations and fixtures, populate it with sample data, and start the local development server.
+
+```bash
+# In the root activist directory:
+cd backend
+python manage.py makemigrations
+python manage.py migrate
+python manage.py runserver
+python manage.py loaddata fixtures/superuser.json
+python manage.py loaddata fixtures/status_types.json
+python manage.py loaddata fixtures/topics.json
+python manage.py populate_db \
+--users 10 \
+--orgs-per-user 1 \
+--groups-per-org 1 \
+--events-per-org 1 \
+--resources-per-entity 2 \
+--faq-entries-per-entity 3
+```
+
+You can then visit <http://localhost:8000/admin> to see the development backend admin UI as well as <http://localhost:8000/v1/schema/swagger-ui/> for the Swagger UI once the server is up and running.
+
+</p>
+</details>
+
+<!-- ### Component stories
+
+activist uses [histoire](https://histoire.dev/) for stories so that frontend components and their documentation are all written in Vue. To view the stories, enter the following in the command line:
+
+```bash
+cd frontend
+yarn run story:dev
+```
+
+From there you'll be able to visit http://localhost:6006/ to view the documentation. Contributions are very welcome! -->
+
+<sub><a href="#top">Back to top.</a></sub>
+
+## Style guide
+
+Please see the [activist style guide](STYLEGUIDE.md) for details about how to follow the code style for the project. We made this guide to assure that we as a community write clean, cohesive code that's easy to write and review. Suggestions for the style guide are welcome.
+
+<sub><a href="#top">Back to top.</a></sub>
+
+## Linting
+
+For the backend [Ruff](https://github.com/astral-sh/ruff) is installed via the required packages to assure that errors are reported correctly. We'd also suggest that VS Code users install the [Ruff extension](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff).
+
+For the frontend [eslint](https://eslint.org/), [eslint-vue](https://eslint.vuejs.org/) and [vue-a11y](https://vue-a11y.github.io/eslint-plugin-vuejs-accessibility/) are added via the dependencies to provide linting support. [eslint-plugin-jsdoc](https://github.com/gajus/eslint-plugin-jsdoc) is enabled for function docstring rules in [`frontend/eslint.config.mjs`](frontend/eslint.config.mjs); whenever those rules apply, follow [Frontend JSDoc](#frontend-jsdoc) under [Documentation](#documentation). General comment conventions (sentence style, JSDoc as block comments) also appear under [Comments](STYLEGUIDE.md#comments) in the style guide.
+
+<sub><a href="#top">Back to top.</a></sub>
+
+## Testing
+
+### Backend
+
+Please run the following commands from the project root to test the backend:
+
+```bash
+# Format the backend, lint the code and run static type checks:
+ruff format ./backend
+ruff check ./backend
+mypy ./backend --config-file ./backend/pyproject.toml
+
+# Start the Docker container:
+docker compose --env-file .env.dev up backend --build -d  # -d to hide logs
+
+# Enter the backend container:
+docker exec -it django_backend sh
+
+# Run backend tests:
+uv run pytest
+
+# To run a specific test:
+uv run pytest path/to/test_file.py::test_function
+
+# To run with a coverage report as is done in PRs:
+uv run pytest --cov --cov-report=term-missing --cov-config=pyproject.toml -vv
+
+# Once tests are finished:
+exit
+```
+
+### Frontend
+
+#### Static Testing
+
+Please check the formatting of your code using Prettier and run the static type check with eslint before pull requests with the following command:
+
+```bash
+# Within ./frontend:
+yarn install  # necessary for non-Linux users as node_modules are set via Docker
+yarn format
+yarn lint
+```
+
+You can further run the following commands for TypeScript type checks on the frontend:
+
+```bash
+# Within ./frontend:
+yarn install  # necessary for non-Linux users as node_modules are set via Docker
+yarn postinstall  # prepare types in frontend/.nuxt
+yarn typecheck
+```
+
+> [!NOTE]
+> Pre-existing TS errors may be ignored. If you need assistance then feel free to open a PR and we'll support!
+
+#### Automated Testing
+
+We use [Vitest](https://vitest.dev/) for component and unit testing. You can run the tests with the following command:
+
+```bash
+# Within ./frontend:
+yarn test
+```
+
+If you would like to run a specific test, please run the following command:
+
+```bash
+yarn test FILE.spec.ts --run
+```
+
+Please see the [frontend testing guide](FRONTEND_TESTING.md) for information on how to write component tests.
+
+> [!NOTE]
+> The Vitest test suite is still in a very early stage. There is a lot of work left to do to increase test coverage, and some features still need troubleshooting. If you need assistance then feel free to open a PR and we'll support!
+
+### End to End Testing (E2E)
+
+#### Run Local E2E Tests
+
+activist uses [Playwright](https://playwright.dev/) for end to end testing. You'll first need to install/update the browsers installed for Playwright as described in their [updating Playwright documentation](https://playwright.dev/docs/intro#updating-playwright). Run the following command in the frontend:
+
+```bash
+# This and all following steps need to be ran each time Playwright is updated.
+yarn playwright install --with-deps
+```
+
+Run the following to run the end to end testing suite:
+
+```bash
+# Note: There may be an installation prompts in the build logs. Hit 'n' to say no.
+# macOS:
+sh run-e2e-tests.sh
+# Linux or Windows using WSL:
+bash run-e2e-tests.sh
+
+# After the tests finish, run the following to see the Playwright HTML report:
+yarn playwright show-report
+
+# Note: If you stop the script before it finishes, please run the following to stop all background processes:
+docker compose --env-file .env.dev down
+lsof -ti tcp:3000 | xargs kill -9 2>/dev/null || true
+```
+
+> [!NOTE]
+> VS Code users can use the [Playwright extension](https://marketplace.visualstudio.com/items?itemName=ms-playwright.playwright) to run the tests. Go to the testing view and then run the test suite. You can also select options including which devices to run and whether to view the browser.
+
+Alternatively, to run the end to end tests using separate shells, please run the following:
+
+In a first shell, start the backend and database:
+
+```bash
+# Start backend and db (USE_PREVIEW skips the full build inside Docker):
+USE_PREVIEW=true docker compose --env-file .env.dev up backend db
+```
+
+In a second shell, build and serve the frontend in preview mode:
+
+```bash
+cd frontend
+
+# Set the environment variables:
+set -a && source ../.env.dev && set +a
+
+# USE_PREVIEW=true switches Nitro to node-server preset (outputs to .output/)
+# so that `yarn preview` works. Without it the build uses netlify-static (dist/).
+export USE_PREVIEW=true
+
+# Install dependencies and build + serve the frontend in preview mode:
+corepack enable
+yarn install
+# Remove any previous static build so nuxi preview uses .output/ not dist/.
+rm -rf dist
+yarn build:local  # answer no to all package installation prompts
+# Note: There may be an installation prompt high in the build logs. Hit 'n' to say no.
+# Start the node server directly - this ensures NUXT_SESSION_PASSWORD and NUXT_API_SECRET
+# are passed correctly (yarn preview can strip env vars in some shells).
+nohup env NUXT_SESSION_PASSWORD="$NUXT_SESSION_PASSWORD" NUXT_API_SECRET="" node .output/server/index.mjs > /dev/null 2>&1 &
+```
+
+In a third shell, run the test suite:
+
+```bash
+cd frontend
+
+# SKIP_WEBSERVER tells Playwright to reuse the running preview server:
+SKIP_WEBSERVER=true yarn test:local
+
+# After the tests finish, run the following to see the Playwright HTML report:
+yarn playwright show-report
+```
+
+Or, instead of the third shell, you can also run the whole suite or run individual tests using Playwright's VS Code extension. You can find a link in the [Development environment](#development-environment) section, under Suggested IDE setup.
+
+Thank you for testing locally! ✨
+
+#### Writing E2E Tests
+
+The [frontend testing guide](FRONTEND_TESTING.md) also has a guide for writing E2E tests.
+
+#### Remote E2E
+
+For testing on your remote forked repository, first create a branch from the remote branch that you want to test against. This can be done with the following command:
+
+```bash
+git push upstream <local-branch-name>:<remote-branch-name-of-your-choice>
+```
+
+You can then navigate to the remote versions of the [actions of the repository](https://github.com/activist-org/activist/actions) in your fork and trigger [ci_playwright_e2e](https://github.com/activist-org/activist/actions/workflows/ci_playwright_e2e.yaml).
+
+For maintainers of the activist main repo, testing PRs is done via the following to make sure that origin has a copy of the branch that can be tested against:
+
+```bash
+# On the branch in question:
+git branch  # to find the name of the branch
+git push -u origin LOCAL_NAME_OF_BRANCH
+```
+
+You can then visit the [actions of the repository](https://github.com/activist-org/activist/actions) to run the the [ci_playwright_e2e](https://github.com/activist-org/activist/actions/workflows/ci_playwright_e2e.yaml) test against the new branch on origin.
+
+Thank you for testing your PRs! 🎉
+
+<sub><a href="#top">Back to top.</a></sub>
+
+## Issues and projects
+
+The [issue tracker for activist](https://github.com/activist-org/activist/issues) is the preferred channel for [bug reports](#bug-reports), [features requests](#feature-requests) and [submitting pull requests](#pull-requests). activist also organizes related issues into [projects](https://github.com/activist-org/activist/projects).
+
+> [!NOTE]
+> Just because an issue is assigned on GitHub doesn't mean the team isn't open to your contribution! Feel free to write [in the issues](https://github.com/activist-org/activist/issues) and we can potentially reassign it to you.
+
+Be sure to check the [`-next release-`](https://github.com/activist-org/activist/labels/-next%20release-) and [`-priority-`](https://github.com/activist-org/activist/labels/-priority-) labels in the [issues](https://github.com/activist-org/activist/issues) for those that are most important, as well as those marked [`good first issue`](https://github.com/activist-org/activist/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) that are tailored for first-time contributors.
+
+<a name="bug-reports"></a>
+
+## Bug reports
+
+A bug is a _demonstrable problem_ that is caused by the code in the repository. Good bug reports are extremely helpful — thank you!
+
+Guidelines for bug reports:
+
+1. **Use the GitHub issue search** to check if the issue has already been reported.
+
+2. **Check if the issue has been fixed** by trying to reproduce it using the latest `main` or development branch in the repository.
+
+3. **Isolate the problem** to make sure that the code in the repository is _definitely_ responsible for the issue.
+
+**Great Bug Reports** tend to have:
+
+- A quick summary
+- Steps to reproduce
+- What you expected would happen
+- What actually happens
+- Notes (why this might be happening, things tried that didn't work, etc)
+
+To make the above steps easier, the activist team asks that contributors report bugs using the [bug report template](https://github.com/activist-org/activist/issues/new?assignees=&labels=bug&projects=activist-org%2F1&template=bug_report.yml), with these issues further being marked with the [`Bug`](https://github.com/activist-org/activist/issues?q=is%3Aissue%20state%3Aopen%20type%3ABug) type.
+
+Again, thank you for your time in reporting issues!
+
+<sub><a href="#top">Back to top.</a></sub>
+
+## Feature requests
+
+Feature requests are more than welcome! Please take a moment to find out whether your idea fits with the scope and aims of the project. When making a suggestion, provide as much detail and context as possible, and further make clear the degree to which you would like to contribute in its development. Feature requests are marked with the [`Feature`](https://github.com/activist-org/activist/issues?q=is%3Aissue%20state%3Aopen%20type%3AFeature) type in the [issues](https://github.com/activist-org/activist/issues).
+
+<sub><a href="#top">Back to top.</a></sub>
+
+## Pull requests
+
+Good pull requests — patches, improvements and new features — are the foundation of our community making activist. They should remain focused in scope and avoid containing unrelated commits. Note that all contributions to this project will be made under [the specified license](LICENSE.txt) and should follow the coding indentation and style standards (contact us if unsure).
+
+**Please ask first** before embarking on any significant pull request (implementing features, refactoring code, etc), otherwise you risk spending a lot of time working on something that the developers might not want to merge into the project. With that being said, major additions are very appreciated!
+
+When making a contribution, adhering to the [GitHub flow](https://docs.github.com/en/get-started/quickstart/github-flow) process is the best way to get your work merged:
+
+1. If you cloned a while ago, get the latest changes from upstream:
+
+   ```bash
+   git checkout <dev-branch>
+   git pull upstream <dev-branch>
+   ```
+
+2. Create a new topic branch (off the main project development branch) to contain your feature, change, or fix:
+
+   ```bash
+   git checkout -b <topic-branch-name>
+   ```
+
+3. Install [prek](https://prek.j178.dev/) to ensure that each of your commits is properly checked against our linter and formatters:
+
+    ```bash
+    # In the project root:
+    prek install
+
+    # Then test the pre-commit hooks to see how it works:
+    prek run --all-files
+    ```
+
+> [!NOTE]
+> prek is Python package that can be installed via pip or any other Python package manager. You can also find it in our [uv.lock](backend/uv.lock) file.
+
+> [!NOTE]
+> If you are having issues with prek and want to send along your changes regardless, you can ignore the pre-commit hooks via the following:
+>
+> ```bash
+> git commit --no-verify -m "COMMIT_MESSAGE"
+> ```
+
+4. Commit your changes in logical chunks, and please try to adhere to [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
+
+> [!NOTE]
+> The following are tools and methods to help you write good commit messages ✨
+>
+> - [commitlint](https://commitlint.io/) helps write [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+> - Git's [interactive rebase](https://docs.github.com/en/github/getting-started-with-github/about-git-rebase) cleans up commits
+
+5. Locally merge (or rebase) the upstream development branch into your topic branch:
+
+   ```bash
+   git pull --rebase upstream <dev-branch>
+   ```
+
+6. Push your topic branch up to your fork:
+
+   ```bash
+   git push origin <topic-branch-name>
+   ```
+
+7. [Open a Pull Request](https://help.github.com/articles/using-pull-requests/) with a clear title and description.
+
+Thank you in advance for your contributions!
+
+<sub><a href="#top">Back to top.</a></sub>
+
+## Documentation
+
+Documentation is an invaluable way to contribute to coding projects as it allows others to more easily understand the project structure and contribute. Issues related to documentation are marked with the [`documentation`](https://github.com/activist-org/activist/labels/documentation) label in the [issues](https://github.com/activist-org/activist/issues).
+
+### Backend numpydoc docstrings
+
+activist follows [numpydoc conventions](https://numpydoc.readthedocs.io/en/latest/format.html) for documenting functions and Python code.
+
+You can use [prek](https://prek.j178.dev/) to run the numpydoc docstring linting:
+
+```bash
+prek run numpydoc-validation --all-files
+```
+
+Function docstrings should have this format:
+
+```py
+def example_function(argument: argument_type) -> return_type:
+    """
+    An example docstring for a function so others understand your work.
+
+    Parameters
+    ----------
+    argument : argument_type
+        Description of your argument.
+
+    Returns
+    -------
+    return_value : return_type
+        Description of your return value.
+
+    Raises
+    ------
+    ErrorType
+        Description of the error and the condition that raises it.
+    """
+
+    ...
+
+    return return_value
+```
+
+### Frontend JSDoc docstrings
+
+The frontend may enforce docstring documentation on some functions and other symbols using [eslint-plugin-jsdoc](https://github.com/gajus/eslint-plugin-jsdoc), configured in [`frontend/eslint.config.mjs`](frontend/eslint.config.mjs). Run `yarn lint` from [`frontend/`](frontend/) to see violations.
+
+#### When to write JSDoc
+
+- **Exported composables and shared utils:** always add JSDoc.
+- **Local helpers and Vue event handlers:** add JSDoc only when the name and types are not self-explanatory.
+- **Vue `Props` interfaces:** one-line comments on fields where useful; skip when the field name and type are obvious.
+
+#### Explicit directions
+
+- **Do** write one short summary sentence by default. Add a second only when behavior, edge cases, or side effects are not obvious.
+- **Do** use `@param` and `@returns` when they add something the TypeScript types alone do not.
+- **Do** use the format `@param name - Description` for consistency.
+- **Don't** restate TypeScript types in prose (e.g. don't write "takes a string" when the signature says `(path: string)`).
+- **Don't** describe obvious control flow (e.g. "returns true if X, false otherwise" when the return type is `boolean` and the function name is `isX`).
+- **Don't** repeat the same information in the opening lines, `@param`, and `@returns`.
+- **Don't** leave empty `/** */` blocks.
+
+#### Examples
+
+One sentence when the signature is clear:
+
+```ts
+/** Removes leading and trailing slashes from a path segment. */
+function normalizePath(path: string): string {
+```
+
+Short prose plus tags when types alone are not enough:
+
+```ts
+/**
+ * Normalizes a router query value to a string array; omits null entries.
+ * @param arr - A single value, an array, or undefined from the route query.
+ * @returns Possibly empty array of strings.
+ */
+export function normalizeArrayFromURLQuery(
+  arr: LocationQueryValue | LocationQueryValue[] | undefined,
+): string[] {
+```
+
+Composable with a short overview and `@returns` when the return shape matters:
+
+```ts
+/**
+ * Shared app error state, toast on failure, and optional session clear on 401.
+ * @returns Reactive `error`, `handleError`, and `clearError`.
+ */
+export function useAppError() {
+```
+
+Vue `Props` — one line per field when useful:
+
+```ts
+export interface Props {
+  /** Organizations currently voting in favor. */
+  organizations: Organization[];
+}
+```
+
+<sub><a href="#top">Back to top.</a></sub>
+
+## Accessibility
+
+Thank you for your interest in improving activist's accessibility. We want our platform to not only be usable for all people, but also to provide a welcoming environment within the development community for all. This section lists a few points to account for when checking accessibility constraints during development:
+
+### Transitions
+
+Users who have motion sickness have the ability to disable transitions and animations on their devices. We use the external dependency [reduced-motion](https://github.com/lucianmurmurache/reduced-motion) to disable transitions and animations in this case.
+
+### Tab focusing
+
+Tab focusing sadly doesn't work out of the box for many browsers. Chrome works great, but the following changes are needed for browsers to function properly with tabs. We'll test activist against browsers with these settings with the assumption that people who need tab for more control of the interface will be able to activate them.
+
+**Firefox**
+
+- Go to `about:config`
+- Search for `accessibility.tabfocus` and check that it's set to type `Boolean` with value `true`
+- Remove it and select `Number` instead
+- Click on the add button and then enter the value `7`
+
+**Safari**
+
+- Go to `Keyboard` in `System Preferences` for your computer (assuming it's a Mac)
+- Select `Use keyboard navigation to move focus between controls` on Mac OS Catalina or `All controls` on earlier Mac OS versions
+- In Safari go to `Settings`
+- Go to the `Advanced` tab
+- Select `Press Tab to highlight each item on a webpage`
+
+Once the above steps are finished you should be able to use tab to navigate web pages :)
+
+<sub><a href="#top">Back to top.</a></sub>
+
+## Internationalization
+
+### Weblate
+
+<a href="https://hosted.weblate.org/projects/activist/activist">
+    <img src="https://raw.githubusercontent.com/activist-org/Organization/main/resources/images/logos/WeblateLogo.png" height="100" alt="Visit Weblate project" align="right">
+</a>
+
+Localization for activist happens on our [public localization project on Weblate](https://hosted.weblate.org/projects/activist/activist). Join us there if you'd like to help bring activist to other languages!
+
+To find issues related to localization, please see the [`localization`](https://github.com/activist-org/activist/issues?q=is%3Aopen+is%3Aissue+label%3Alocalization) label in the [issues](https://github.com/activist-org/activist/issues), and to report a localization issue use the [localization issue form](https://github.com/activist-org/activist/issues/new?assignees=&labels=localization&projects=activist-org%2F1&template=localization.yml). Please also see the [style guide](STYLEGUIDE.md) for more information on how to create new localization keys.
+
+> [!IMPORTANT]
+> If you're having issues with the vue/nuxt i18n `$t` local property not being picked up by TypeScript and being reported as invalid/not existing across the codebase, then please add the following file at `frontend/types/vue-i18n.d.ts`:
+>
+> ```ts
+> // frontend/types/vue-i18n.d.ts
+> // Attn: Fixes Property '$t' does not exist on type ... errors.
+> // Note: This file is git ignored, but can be used as a local fix for excessive TypeScript errors.
+> declare module "vue" {
+>   interface ComponentCustomProperties {
+>     $t: (key: string) => string;
+>   }
+> }
+> ```
+
+### i18n-check
+
+activist uses [i18n-check](https://github.com/activist-org/i18n-check) to validate our internationalization key-value pairs. The basic commands to check the i18n keys and values are:
+
+```bash
+# Note: You need to have installed the uv.lock file in your virtual environment.
+i18n-check -h  # see the help
+i18n-check -a  # run all checks
+```
+
+You can also run individual checks. Please see the [documentation for i18n-check](https://i18n-check.readthedocs.io/en/latest/) to learn more.
+
+If you do need to edit the directories and files skipped by certain checks, then these edits can be made in the [.i18n-check.yaml](./.i18n-check.yaml) file. If you're having issues using `i18n-check`, please feel free to contact the team for support!
+
+<sub><a href="#top">Back to top.</a></sub>
+
+## Design
+
+<a href="https://www.figma.com/file/I9McFfaLu1RiiWp5IP3YjE/activist_designs?node-id=805%3A231">
+    <img src="https://raw.githubusercontent.com/activist-org/Organization/main/resources/images/logos/FigmaLogo.png" width="100" alt="Public Figma Designs" align="right">
+</a>
+
+Designs for activist are done in the [public design file in Figma](https://www.figma.com/file/I9McFfaLu1RiiWp5IP3YjE/activist_designs?node-id=805%3A231). Those interested in helping with activist's design are also welcome to share their ideas using the [design improvement](https://github.com/activist-org/activist/issues/new?assignees=&labels=design&template=design_improvement.yml) template that makes an issue marked with the [`design`](https://github.com/activist-org/activist/issues?q=is%3Aopen+is%3Aissue+label%3Adesign) label.
+
+Note that the linked Figma file above is the [public facing designs](https://www.figma.com/file/I9McFfaLu1RiiWp5IP3YjE/activist_designs?node-id=805%3A231). Those interested in improving them or contributing designs for new features are invited to contact the team on GitHub or [Matrix](https://matrix.to/#/!uIGQUxlCnEzrPiRsRw:matrix.org?via=matrix.org&via=effektio.org&via=acter.global). We'd love to see a sample of your work, and if everything looks good we'll schedule a time to get connected!
+
+All branding elements such as logos, icons, colors and fonts should follow those that are set out in [activist-org/Organization](https://github.com/activist-org/Organization). As the project is fully open source, these elements are also open for discussion. Your efforts in making activist products professional with a distinct and cohesive identity are much appreciated.
+
+<sub><a href="#top">Back to top.</a></sub>
+
+## Troubleshooting
+
+### Nuxt Auto Import Errors
+
+Nuxt uses auto imports to make frontend development more seamless, but at times these imports malfunction. For the `Property 'PROPERTY_NAME' does not exist on type...` errors, this is caused both by having an out of sync `yarn.lock` file and having Nuxt improperly installed.
+
+Please run [frontend/reset_local_env.sh](frontend/reset_local_env.sh) to reset the local frontend environment to allow for local testing. This can be done via the following commands in the `frontend` directory:
+
+    ```bash
+    # Linux:
+    sh reset_local_env.sh
+
+    # MacOS:
+    sh reset_local_env.sh
+
+    # Windows:
+    # Run the commands below found in frontend/reset_local_env.sh.
+    ```
+
+### PostgreSQL Port Conflict with PgAdmin or Local PostgreSQL Installation
+
+#### The Problem
+
+If you have **PgAdmin** or a local **PostgreSQL** server installed and it's already listening on **port `5432`**, you may encounter a conflict when trying to run the Docker-based `postgres_db` service. Docker will fail to bind to port `5432`, showing an error like:
+
+> `Error starting userland proxy: listen tcp4 0.0.0.0:5432: bind: address already in use`
+
+> [!IMPORTANT]
+> **Do _not_ change `DATABASE_PORT` in `.env.dev` to fix this. Please see details below.**
+
+Changing this port will cause test failures, specifically `TypeError: can only concatenate str (not "NoneType") to str` errors in authentication and serializer tests.
+
+This happens because your app expects PostgreSQL on port `5432`. Changing the port in `.env.dev` breaks database connections during testing.
+
+#### The Solution
+
+To resolve the port conflict, please stop your local PostgreSQL service instead with one of the following commands:
+
+**Linux**
+
+```bash
+sudo systemctl stop postgresql
+```
+
+**macOS (Homebrew-based PostgreSQL)**
+
+```bash
+brew services stop postgresql
+```
+
+**Windows**
+
+1. Open **Services** (search *"Services"* in the Start Menu)
+2. Locate **PostgreSQL** in the list
+3. Right-click and choose **Stop**
+
+Once stopped, you can safely run Docker services like the Docker Compose commands in the [Development Environment](#development-environment) section.
+
+### Still experiencing problems?
+
+Please feel free to reach out to the team in the [Development room on Matrix](https://matrix.to/#/!CRgLpGeOBNwxYCtqmK:matrix.org?via=matrix.org&via=systemli.org&via=librezo.fr) if you have a question!
+
+<sub><a href="#top">Back to top.</a></sub>

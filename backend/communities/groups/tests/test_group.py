@@ -1,0 +1,80 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+"""
+Testing for the Group model.
+"""
+
+# mypy: ignore-errors
+from datetime import datetime
+from uuid import UUID
+
+import pytest
+from faker import Faker
+
+from authentication.factories import UserFactory
+from communities.groups.models import Group
+from communities.organizations.factories import OrganizationFactory
+from content.factories import EntityLocationFactory
+
+pytestmark = pytest.mark.django_db
+
+
+def test_group_create() -> None:
+    """
+    Test complete group creation with all fields.
+    """
+    user = UserFactory()
+    org = OrganizationFactory(created_by=user)
+    location = EntityLocationFactory()
+    fake = Faker()
+
+    group = Group.objects.create(
+        org=org,
+        created_by=user,
+        name=fake.company(),
+        tagline=fake.catch_phrase(),
+        location=location,
+        category=fake.word(),
+        terms_checked=True,
+    )
+
+    assert isinstance(group.id, UUID)
+    assert group.org == org
+    assert group.created_by == user
+    assert isinstance(group.creation_date, datetime)
+    assert group.terms_checked is True
+
+
+def test_group_multiple_groups_per_org() -> None:
+    """
+    Test that multiple groups can be created per organization.
+    """
+    user = UserFactory()
+    org = OrganizationFactory(created_by=user)
+    location = EntityLocationFactory()
+    fake = Faker()
+
+    group1 = Group.objects.create(
+        org=org,
+        created_by=user,
+        name=fake.company(),
+        location=location,
+        category=fake.word(),
+        terms_checked=True,
+    )
+
+    group2 = Group.objects.create(
+        org=org,
+        created_by=user,
+        name=fake.company(),
+        location=location,
+        category=fake.word(),
+        terms_checked=True,
+    )
+
+    assert Group.objects.count() == 2
+    assert group1.org == org
+    assert group2.org == org
+
+    org_groups = Group.objects.filter(org=org)
+    assert group1 in org_groups
+    assert group2 in org_groups

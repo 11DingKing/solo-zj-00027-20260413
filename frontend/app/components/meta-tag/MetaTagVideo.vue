@@ -1,0 +1,12 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<template>
+  <MetaTag :iconName="IconMap.VIDEO" :label="label" :value="link" />
+</template>
+
+<script setup lang="ts">
+defineProps<{
+  link: string;
+  label: string;
+  iconSize?: string;
+}>();
+</script>

@@ -1,0 +1,11 @@
+node_modules/
+.nuxt/
+.output/
+venv/
+
+dist/
+coverage/
+playwright-report/
+tests-examples/
+test-results/
+frontend/test-e2e/.auth/

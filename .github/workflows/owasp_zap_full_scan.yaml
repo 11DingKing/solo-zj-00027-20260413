@@ -1,0 +1,39 @@
+name: OWASP ZAP Optimized Security Scan
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * 1" # Run weekly on Mondays at 2 AM UTC
+
+jobs:
+  zap_scan:
+    runs-on: ubuntu-latest
+    name: Security Scan with OWASP ZAP
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Create reports directory with proper permissions
+        run: |
+          mkdir -p zap-reports
+          chmod 777 zap-reports
+
+      - name: Run ZAP Scan with Automation Framework
+        run: |
+          docker pull ghcr.io/zaproxy/zaproxy:stable
+          docker run --rm \
+            -v $(pwd)/.zap:/zap/wrk \
+            -v $(pwd)/zap-reports:/zap/reports:rw \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap.sh -cmd -autorun /zap/wrk/zap.yaml || true
+
+      - name: List report files
+        run: |
+          echo "Listing files in zap-reports directory:"
+          ls -la zap-reports/
+
+      - name: Upload ZAP Scan Results
+        uses: actions/upload-artifact@v6
+        with:
+          name: zap-scan-results
+          path: zap-reports/
+          if-no-files-found: warn

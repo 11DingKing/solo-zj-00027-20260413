@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "batisteo.vscode-django",
+    "bradlc.vscode-tailwindcss",
+    "charliermarsh.ruff",
+    "esbenp.prettier-vscode",
+    "ms-playwright.playwright",
+    "streetsidesoftware.code-spell-checker",
+    "Vue.volar"
+  ]
+}
