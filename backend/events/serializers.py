@@ -25,6 +25,7 @@ from content.serializers import (
 )
 from events.models import (
     Event,
+    EventAttendee,
     EventFaq,
     EventFlag,
     EventResource,
@@ -32,6 +33,7 @@ from events.models import (
     EventText,
     EventTime,
     Format,
+    Notification,
 )
 from utils.utils import (
     validate_creation_and_deprecation_dates,
@@ -620,3 +622,45 @@ class FormatSerializer(serializers.ModelSerializer[Event]):
         validate_creation_and_deprecation_dates(data)
 
         return data
+
+
+# MARK: Event Registration
+
+
+class EventRegistrationSerializer(serializers.Serializer[Any]):
+    """
+    Serializer for event registration requests.
+    """
+
+    event_id = serializers.UUIDField(required=True)
+
+
+class EventRegistrationResponseSerializer(serializers.Serializer[Any]):
+    """
+    Serializer for event registration response.
+    """
+
+    success = serializers.BooleanField()
+    message = serializers.CharField()
+    remaining_spots = serializers.IntegerField(allow_null=True)
+    is_registered = serializers.BooleanField()
+
+
+class EventAttendeeSerializer(serializers.ModelSerializer[Any]):
+    """
+    Serializer for EventAttendee model data.
+    """
+
+    class Meta:
+        model = EventAttendee
+        fields = "__all__"
+
+
+class NotificationSerializer(serializers.ModelSerializer[Any]):
+    """
+    Serializer for Notification model data.
+    """
+
+    class Meta:
+        model = Notification
+        fields = "__all__"

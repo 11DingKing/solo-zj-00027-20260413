@@ -53,6 +53,7 @@ class Event(models.Model):
     is_private = models.BooleanField(default=False)
     times = models.ManyToManyField("events.EventTime", blank=True)
     terms_checked = models.BooleanField(default=False)
+    max_participants = models.PositiveIntegerField(blank=True, null=True)
     creation_date = models.DateTimeField(auto_now_add=True)
     deletion_date = models.DateTimeField(blank=True, null=True)
 
@@ -134,8 +135,12 @@ class EventAttendee(models.Model):
         "events.Role", on_delete=models.CASCADE, blank=True, null=True
     )
     attendee_status = models.ForeignKey(
-        "EventAttendeeStatus", on_delete=models.CASCADE, default=1
+        "EventAttendeeStatus", on_delete=models.CASCADE
     )
+    registration_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ["event", "user"]
 
     def __str__(self) -> str:
         return f"{self.user} - {self.event}"
@@ -149,8 +154,12 @@ class EventAttendeeStatus(models.Model):
     Attendance statuses for users to events.
     """
 
+    STATUS_REGISTERED = "registered"
+    STATUS_CANCELLED = "cancelled"
+    STATUS_ATTENDED = "attended"
+
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    status_name = models.CharField(max_length=255)
+    status_name = models.CharField(max_length=255, unique=True)
 
     def __str__(self) -> str:
         return self.status_name
@@ -273,3 +282,45 @@ class EventText(Text):
 
     def __str__(self) -> str:
         return f"{self.event} - {self.iso}"
+
+
+# MARK: Notification
+
+
+class Notification(models.Model):
+    """
+    Model for user notifications.
+    """
+
+    TYPE_CHOICES = [
+        ("event_registration_success", "Event Registration Success"),
+        ("event_registration_cancelled", "Event Registration Cancelled"),
+        ("event_full", "Event Full"),
+        ("event_updated", "Event Updated"),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    user = models.ForeignKey(
+        "authentication.UserModel",
+        on_delete=models.CASCADE,
+        related_name="notifications",
+    )
+    type = models.CharField(max_length=255, choices=TYPE_CHOICES)
+    title = models.CharField(max_length=255)
+    message = models.TextField(max_length=1000)
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="notifications",
+    )
+    is_read = models.BooleanField(default=False)
+    creation_date = models.DateTimeField(auto_now_add=True)
+    read_date = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self) -> str:
+        return f"{self.user} - {self.type}"
+
+    class Meta:
+        ordering = ["-creation_date"]

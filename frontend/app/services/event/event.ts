@@ -4,6 +4,22 @@
 
 import { del, get, post } from "~/services/http";
 
+export interface EventRegistrationStatusResponse {
+  success: boolean;
+  message: string;
+  remainingSpots: number | null;
+  isRegistered: boolean;
+  isCreator: boolean;
+  maxParticipants: number | null;
+}
+
+export interface EventRegistrationResponse {
+  success: boolean;
+  message: string;
+  remainingSpots: number | null;
+  isRegistered: boolean;
+}
+
 // MARK: Map API Response to Type
 
 export function mapEvent(res: EventResponse): EventResponse {
@@ -23,6 +39,7 @@ export function mapEvent(res: EventResponse): EventResponse {
     creationDate: res.creationDate,
     orgs: res.orgs,
     texts: res.texts ?? [],
+    maxParticipants: res.maxParticipants,
   };
 }
 
@@ -90,6 +107,51 @@ export async function createEvent(
 export async function deleteEvent(eventId: string): Promise<void> {
   try {
     await del(`/events/events/${eventId}`);
+  } catch (e) {
+    throw errorHandler(e);
+  }
+}
+
+// MARK: Registration
+
+export async function getEventRegistrationStatus(
+  eventId: string
+): Promise<EventRegistrationStatusResponse> {
+  try {
+    const res = await get<EventRegistrationStatusResponse>(
+      `/events/event_registration_status?event_id=${eventId}`
+    );
+    return res;
+  } catch (e) {
+    throw errorHandler(e);
+  }
+}
+
+export async function registerForEvent(
+  eventId: string
+): Promise<EventRegistrationResponse> {
+  try {
+    const res = await post<EventRegistrationResponse, { eventId: string }>(
+      `/events/event_register`,
+      { eventId },
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return res;
+  } catch (e) {
+    throw errorHandler(e);
+  }
+}
+
+export async function unregisterFromEvent(
+  eventId: string
+): Promise<EventRegistrationResponse> {
+  try {
+    const res = await post<EventRegistrationResponse, { eventId: string }>(
+      `/events/event_unregister`,
+      { eventId },
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return res;
   } catch (e) {
     throw errorHandler(e);
   }

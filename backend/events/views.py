@@ -10,6 +10,7 @@ from typing import Any, Sequence, Type
 from uuid import UUID
 
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Case, IntegerField, Q, QuerySet, Value, When
 from django.db.utils import IntegrityError, OperationalError
 from django.http import HttpResponse
@@ -35,20 +36,26 @@ from core.permissions import IsAdminStaffCreatorOrReadOnly
 from events.filters import EventFilters
 from events.models import (
     Event,
+    EventAttendee,
+    EventAttendeeStatus,
     EventFaq,
     EventFlag,
     EventResource,
     EventSocialLink,
     EventText,
+    Notification,
 )
 from events.serializers import (
     EventFaqSerializer,
     EventFlagSerializers,
     EventPOSTSerializer,
+    EventRegistrationResponseSerializer,
+    EventRegistrationSerializer,
     EventResourceSerializer,
     EventSerializer,
     EventSocialLinkSerializer,
     EventTextSerializer,
+    NotificationSerializer,
 )
 
 logger = logging.getLogger("django")
@@ -797,3 +804,501 @@ class EventCalenderAPIView(APIView):
         )
 
         return response
+
+
+# MARK: Event Registration
+
+
+def get_or_create_registered_status() -> EventAttendeeStatus:
+    """
+    Get or create the 'registered' status.
+
+    Returns
+    -------
+    EventAttendeeStatus
+        The registered status instance.
+    """
+    status, _ = EventAttendeeStatus.objects.get_or_create(
+        status_name=EventAttendeeStatus.STATUS_REGISTERED
+    )
+    return status
+
+
+def get_or_create_cancelled_status() -> EventAttendeeStatus:
+    """
+    Get or create the 'cancelled' status.
+
+    Returns
+    -------
+    EventAttendeeStatus
+        The cancelled status instance.
+    """
+    status, _ = EventAttendeeStatus.objects.get_or_create(
+        status_name=EventAttendeeStatus.STATUS_CANCELLED
+    )
+    return status
+
+
+def create_notification(
+    user: UserModel,
+    notification_type: str,
+    title: str,
+    message: str,
+    event: Event | None = None,
+) -> Notification:
+    """
+    Create a notification for a user.
+
+    Parameters
+    ----------
+    user : UserModel
+        The user to notify.
+    notification_type : str
+        The type of notification.
+    title : str
+        The notification title.
+    message : str
+        The notification message.
+    event : Event, optional
+        The associated event, if any.
+
+    Returns
+    -------
+    Notification
+        The created notification instance.
+    """
+    return Notification.objects.create(
+        user=user,
+        type=notification_type,
+        title=title,
+        message=message,
+        event=event,
+    )
+
+
+def get_remaining_spots(event: Event) -> int | None:
+    """
+    Calculate remaining spots for an event.
+
+    Parameters
+    ----------
+    event : Event
+        The event to calculate spots for.
+
+    Returns
+    -------
+    int or None
+        Remaining spots, or None if no max_participants set.
+    """
+    if event.max_participants is None:
+        return None
+
+    registered_status = get_or_create_registered_status()
+    registered_count = EventAttendee.objects.filter(
+        event=event, attendee_status=registered_status
+    ).count()
+
+    return max(0, event.max_participants - registered_count)
+
+
+class EventRegisterAPIView(APIView):
+    """
+    API view for event registration.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        request=EventRegistrationSerializer,
+        responses={
+            200: EventRegistrationResponseSerializer,
+            400: OpenApiResponse(response={"detail": "Registration failed."}),
+            404: OpenApiResponse(response={"detail": "Event not found."}),
+        },
+    )
+    def post(self, request: Request) -> Response:
+        """
+        Register the current user for an event.
+
+        Uses database transaction and row locking to prevent overselling.
+
+        Parameters
+        ----------
+        request : Request
+            The DRF request containing event_id.
+
+        Returns
+        -------
+        Response
+            Response with registration result.
+        """
+        serializer = EventRegistrationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        event_id = serializer.validated_data["event_id"]
+        user = request.user
+
+        try:
+            with transaction.atomic():
+                event = Event.objects.select_for_update().get(id=event_id)
+
+                if event.created_by == user:
+                    return Response(
+                        {
+                            "success": False,
+                            "message": "You cannot register for your own event.",
+                            "remaining_spots": get_remaining_spots(event),
+                            "is_registered": False,
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                registered_status = get_or_create_registered_status()
+
+                existing_attendee = EventAttendee.objects.filter(
+                    event=event, user=user
+                ).first()
+
+                if existing_attendee:
+                    if existing_attendee.attendee_status == registered_status:
+                        return Response(
+                            {
+                                "success": False,
+                                "message": "You are already registered for this event.",
+                                "remaining_spots": get_remaining_spots(event),
+                                "is_registered": True,
+                            },
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    else:
+                        existing_attendee.attendee_status = registered_status
+                        existing_attendee.save()
+
+                        create_notification(
+                            user=user,
+                            notification_type="event_registration_success",
+                            title=f"Registered for {event.name}",
+                            message=f"You have successfully registered for the event '{event.name}'.",
+                            event=event,
+                        )
+
+                        return Response(
+                            {
+                                "success": True,
+                                "message": "Successfully registered for the event.",
+                                "remaining_spots": get_remaining_spots(event),
+                                "is_registered": True,
+                            },
+                            status=status.HTTP_200_OK,
+                        )
+
+                if event.max_participants is not None:
+                    registered_count = EventAttendee.objects.filter(
+                        event=event, attendee_status=registered_status
+                    ).count()
+
+                    if registered_count >= event.max_participants:
+                        return Response(
+                            {
+                                "success": False,
+                                "message": "This event is full.",
+                                "remaining_spots": 0,
+                                "is_registered": False,
+                            },
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+
+                EventAttendee.objects.create(
+                    event=event,
+                    user=user,
+                    attendee_status=registered_status,
+                )
+
+                create_notification(
+                    user=user,
+                    notification_type="event_registration_success",
+                    title=f"Registered for {event.name}",
+                    message=f"You have successfully registered for the event '{event.name}'.",
+                    event=event,
+                )
+
+                remaining = get_remaining_spots(event)
+
+                return Response(
+                    {
+                        "success": True,
+                        "message": "Successfully registered for the event.",
+                        "remaining_spots": remaining,
+                        "is_registered": True,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+
+        except Event.DoesNotExist:
+            return Response(
+                {"detail": "Event not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        except Exception as e:
+            logger.exception(f"Event registration failed: {e}")
+            return Response(
+                {"detail": "Registration failed. Please try again."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class EventUnregisterAPIView(APIView):
+    """
+    API view for cancelling event registration.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        request=EventRegistrationSerializer,
+        responses={
+            200: EventRegistrationResponseSerializer,
+            400: OpenApiResponse(response={"detail": "Cancellation failed."}),
+            404: OpenApiResponse(response={"detail": "Event not found."}),
+        },
+    )
+    def post(self, request: Request) -> Response:
+        """
+        Cancel the current user's registration for an event.
+
+        Parameters
+        ----------
+        request : Request
+            The DRF request containing event_id.
+
+        Returns
+        -------
+        Response
+            Response with cancellation result.
+        """
+        serializer = EventRegistrationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        event_id = serializer.validated_data["event_id"]
+        user = request.user
+
+        try:
+            event = Event.objects.get(id=event_id)
+
+            registered_status = get_or_create_registered_status()
+            cancelled_status = get_or_create_cancelled_status()
+
+            attendee = EventAttendee.objects.filter(
+                event=event, user=user, attendee_status=registered_status
+            ).first()
+
+            if not attendee:
+                return Response(
+                    {
+                        "success": False,
+                        "message": "You are not registered for this event.",
+                        "remaining_spots": get_remaining_spots(event),
+                        "is_registered": False,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            attendee.attendee_status = cancelled_status
+            attendee.save()
+
+            create_notification(
+                user=user,
+                notification_type="event_registration_cancelled",
+                title=f"Cancelled registration for {event.name}",
+                message=f"You have cancelled your registration for the event '{event.name}'.",
+                event=event,
+            )
+
+            remaining = get_remaining_spots(event)
+
+            return Response(
+                {
+                    "success": True,
+                    "message": "Successfully cancelled registration.",
+                    "remaining_spots": remaining,
+                    "is_registered": False,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Event.DoesNotExist:
+            return Response(
+                {"detail": "Event not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        except Exception as e:
+            logger.exception(f"Event cancellation failed: {e}")
+            return Response(
+                {"detail": "Cancellation failed. Please try again."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class EventRegistrationStatusAPIView(APIView):
+    """
+    API view for checking event registration status.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="event_id",
+                type=OpenApiTypes.UUID,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="The event ID to check registration status for.",
+            ),
+        ],
+        responses={
+            200: EventRegistrationResponseSerializer,
+            404: OpenApiResponse(response={"detail": "Event not found."}),
+        },
+    )
+    def get(self, request: Request) -> Response:
+        """
+        Check the current user's registration status for an event.
+
+        Parameters
+        ----------
+        request : Request
+            The DRF request containing event_id as query parameter.
+
+        Returns
+        -------
+        Response
+            Response with registration status and remaining spots.
+        """
+        event_id = request.query_params.get("event_id")
+
+        if not event_id:
+            return Response(
+                {"detail": "Event ID is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            event = Event.objects.get(id=event_id)
+            user = request.user
+
+            registered_status = get_or_create_registered_status()
+
+            is_registered = EventAttendee.objects.filter(
+                event=event, user=user, attendee_status=registered_status
+            ).exists()
+
+            remaining = get_remaining_spots(event)
+
+            return Response(
+                {
+                    "success": True,
+                    "message": "Registration status retrieved.",
+                    "remaining_spots": remaining,
+                    "is_registered": is_registered,
+                    "is_creator": event.created_by == user,
+                    "max_participants": event.max_participants,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Event.DoesNotExist:
+            return Response(
+                {"detail": "Event not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+
+class NotificationListAPIView(GenericAPIView[Notification]):
+    """
+    API view for listing user notifications.
+    """
+
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
+
+    def get_queryset(self) -> QuerySet[Notification]:
+        return Notification.objects.filter(user=self.request.user).order_by(
+            "-creation_date"
+        )
+
+    @extend_schema(
+        responses={200: NotificationSerializer(many=True)},
+    )
+    def get(self, request: Request) -> Response:
+        """
+        List all notifications for the current user.
+
+        Parameters
+        ----------
+        request : Request
+            The DRF request.
+
+        Returns
+        -------
+        Response
+            Paginated list of notifications.
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class NotificationMarkReadAPIView(APIView):
+    """
+    API view for marking a notification as read.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(response={"message": "Notification marked as read."}),
+            404: OpenApiResponse(response={"detail": "Notification not found."}),
+        },
+    )
+    def post(self, request: Request, id: UUID) -> Response:
+        """
+        Mark a notification as read.
+
+        Parameters
+        ----------
+        request : Request
+            The DRF request.
+        id : UUID
+            The notification ID.
+
+        Returns
+        -------
+        Response
+            Response indicating success.
+        """
+        try:
+            notification = Notification.objects.get(id=id, user=request.user)
+            notification.is_read = True
+            notification.save()
+
+            return Response(
+                {"message": "Notification marked as read."},
+                status=status.HTTP_200_OK,
+            )
+
+        except Notification.DoesNotExist:
+            return Response(
+                {"detail": "Notification not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )

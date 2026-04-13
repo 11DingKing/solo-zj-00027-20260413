@@ -13,9 +13,14 @@ from events.views import (
     EventFaqViewSet,
     EventFlagAPIView,
     EventFlagDetailAPIView,
+    EventRegisterAPIView,
+    EventRegistrationStatusAPIView,
     EventResourceViewSet,
     EventSocialLinkViewSet,
     EventTextViewSet,
+    EventUnregisterAPIView,
+    NotificationListAPIView,
+    NotificationMarkReadAPIView,
 )
 
 app_name = "events"
@@ -45,4 +50,9 @@ urlpatterns = [
     path("event_flags/<uuid:id>", EventFlagDetailAPIView.as_view()),
     path("event_calendar", EventCalenderAPIView.as_view()),
     path("event_texts/<uuid:id>", EventTextViewSet.as_view()),
+    path("event_register", EventRegisterAPIView.as_view()),
+    path("event_unregister", EventUnregisterAPIView.as_view()),
+    path("event_registration_status", EventRegistrationStatusAPIView.as_view()),
+    path("notifications", NotificationListAPIView.as_view()),
+    path("notifications/<uuid:id>/mark_read", NotificationMarkReadAPIView.as_view()),
 ]
