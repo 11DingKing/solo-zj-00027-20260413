@@ -20,7 +20,7 @@
         {{ $t("i18n.components.card_get_involved_event.participate_subtext") }}
       </p>
 
-      <div v-if="hasRegistrationInfo" class="space-y-3 pt-2">
+      <div v-if="userIsSignedIn && eventId" class="space-y-3 pt-2">
         <div
           v-if="remainingSpotsText"
           class="flex items-center gap-2 text-sm font-medium"
@@ -33,7 +33,7 @@
           <span>{{ remainingSpotsText }}</span>
         </div>
 
-        <div v-if="userIsSignedIn" class="flex w-max pt-2">
+        <div class="flex w-max pt-2">
           <BtnAction
             v-if="isCreator"
             :disabled="true"
@@ -74,25 +74,24 @@
             fontSize="sm"
           />
         </div>
-
-        <div v-else class="flex w-max pt-2">
-          <BtnRouteInternal
-            ariaLabel="i18n._global.sign_in_aria_label"
-            class="w-full"
-            :cta="true"
-            fontSize="sm"
-            iconSize="1.45em"
-            :label="
-              $t('i18n.components.card_get_involved_event.sign_in_to_register')
-            "
-            linkTo="/sign-in"
-            :rightIcon="IconMap.ARROW_RIGHT"
-          />
-        </div>
       </div>
 
       <div v-else class="flex w-max pt-2">
         <BtnRouteInternal
+          v-if="!userIsSignedIn"
+          ariaLabel="i18n._global.sign_in_aria_label"
+          class="w-full"
+          :cta="true"
+          fontSize="sm"
+          iconSize="1.45em"
+          :label="
+            $t('i18n.components.card_get_involved_event.sign_in_to_register')
+          "
+          linkTo="/sign-in"
+          :rightIcon="IconMap.ARROW_RIGHT"
+        />
+        <BtnRouteInternal
+          v-else
           ariaLabel="i18n._global.offer_to_help_aria_label"
           class="w-full"
           :cta="true"
@@ -129,13 +128,6 @@ const { toast } = useToaster();
 
 const eventId = computed(() => props.event?.id || "");
 
-const hasRegistrationInfo = computed(() => {
-  return (
-    registrationStatus.value !== null &&
-    registrationStatus.value.maxParticipants !== null
-  );
-});
-
 const isRegistered = computed(() => {
   return registrationStatus.value?.isRegistered || false;
 });
@@ -154,19 +146,32 @@ const maxParticipants = computed(() => {
 
 const isFull = computed(() => {
   const spots = remainingSpots.value;
-  return spots !== null && spots <= 0;
+  const max = maxParticipants.value;
+  if (max === null || max === undefined) {
+    return false;
+  }
+  return spots !== null && spots !== undefined && spots <= 0;
 });
 
 const isLowSpots = computed(() => {
   const spots = remainingSpots.value;
-  return spots !== null && spots > 0 && spots < 10;
+  const max = maxParticipants.value;
+  if (max === null || max === undefined) {
+    return false;
+  }
+  return spots !== null && spots !== undefined && spots > 0 && spots < 10;
 });
 
 const remainingSpotsText = computed(() => {
   const spots = remainingSpots.value;
   const max = maxParticipants.value;
 
-  if (max === null || spots === null) {
+  if (
+    max === null ||
+    max === undefined ||
+    spots === null ||
+    spots === undefined
+  ) {
     return null;
   }
 
