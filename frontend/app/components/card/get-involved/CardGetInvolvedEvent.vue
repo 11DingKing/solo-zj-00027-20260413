@@ -13,16 +13,16 @@
       />
     </div>
     <div class="space-y-3 pt-3">
-      <p v-if="event?.texts[0]?.getInvolved">
-        {{ event.texts[0]?.getInvolved }}
+      <p v-if="event?.texts?.[0]?.getInvolved">
+        {{ event.texts[0].getInvolved }}
       </p>
       <p v-else>
         {{ $t("i18n.components.card_get_involved_event.participate_subtext") }}
       </p>
 
-      <div v-if="registrationStatus" class="space-y-3 pt-2">
+      <div v-if="hasRegistrationInfo" class="space-y-3 pt-2">
         <div
-          v-if="remainingSpotsDisplay"
+          v-if="remainingSpotsText"
           class="flex items-center gap-2 text-sm font-medium"
           :class="{
             'text-warning': isLowSpots,
@@ -30,23 +30,27 @@
             'text-primary-text': !isLowSpots && !isFull,
           }"
         >
-          <span>{{ remainingSpotsDisplay }}</span>
+          <span>{{ remainingSpotsText }}</span>
         </div>
 
         <div v-if="userIsSignedIn" class="flex w-max pt-2">
           <BtnAction
-            v-if="registrationStatus.isCreator"
+            v-if="isCreator"
             :disabled="true"
-            :label="$t('i18n.components.card_get_involved_event.you_are_creator')"
+            :label="
+              $t('i18n.components.card_get_involved_event.you_are_creator')
+            "
             class="w-full opacity-60"
             fontSize="sm"
           />
 
           <BtnAction
-            v-else-if="registrationStatus.isRegistered"
+            v-else-if="isRegistered"
             @click="handleUnregister"
-            :loading="registrationLoading"
-            :label="$t('i18n.components.card_get_involved_event.cancel_registration')"
+            :loading="isLoading"
+            :label="
+              $t('i18n.components.card_get_involved_event.cancel_registration')
+            "
             class="w-full"
             fontSize="sm"
             variant="secondary"
@@ -63,7 +67,7 @@
           <BtnAction
             v-else
             @click="handleRegister"
-            :loading="registrationLoading"
+            :loading="isLoading"
             :label="$t('i18n.components.card_get_involved_event.register')"
             class="w-full"
             :cta="true"
@@ -78,7 +82,9 @@
             :cta="true"
             fontSize="sm"
             iconSize="1.45em"
-            :label="$t('i18n.components.card_get_involved_event.sign_in_to_register')"
+            :label="
+              $t('i18n.components.card_get_involved_event.sign_in_to_register')
+            "
             linkTo="/sign-in"
             :rightIcon="IconMap.ARROW_RIGHT"
           />
@@ -102,87 +108,154 @@
 </template>
 
 <script setup lang="ts">
+const props = defineProps<{
+  event?: CommunityEvent | null;
+  disclaimer?: string;
+}>();
+
 const { openModal: openModalTextEvent } = useModalHandlers("ModalTextEvent");
 
 const { userIsSignedIn } = useUser();
 
-const paramsEventId = useRoute().params.eventId;
-const eventId = typeof paramsEventId === "string" ? paramsEventId : "";
+const isLoading = ref(false);
+const registrationStatus = ref<{
+  isRegistered: boolean;
+  isCreator: boolean;
+  remainingSpots: number | null;
+  maxParticipants: number | null;
+} | null>(null);
 
-const { data: event } = useGetEvent(eventId);
-
-const {
-  loading: registrationLoading,
-  registrationStatus,
-  fetchRegistrationStatus,
-  register,
-  unregister,
-  getRemainingSpotsDisplay,
-} = useEventRegistrationMutations();
-
-const { handleError, clearError } = useAppError();
 const { toast } = useToaster();
 
-const remainingSpotsDisplay = computed(() => {
-  if (!registrationStatus.value) return null;
-  return getRemainingSpotsDisplay(
-    registrationStatus.value.remainingSpots,
-    registrationStatus.value.maxParticipants
+const eventId = computed(() => props.event?.id || "");
+
+const hasRegistrationInfo = computed(() => {
+  return (
+    registrationStatus.value !== null &&
+    registrationStatus.value.maxParticipants !== null
   );
 });
 
-const isLowSpots = computed(() => {
-  if (!registrationStatus.value) return false;
-  const spots = registrationStatus.value.remainingSpots;
-  return spots !== null && spots > 0 && spots < 10;
+const isRegistered = computed(() => {
+  return registrationStatus.value?.isRegistered || false;
+});
+
+const isCreator = computed(() => {
+  return registrationStatus.value?.isCreator || false;
+});
+
+const remainingSpots = computed(() => {
+  return registrationStatus.value?.remainingSpots;
+});
+
+const maxParticipants = computed(() => {
+  return registrationStatus.value?.maxParticipants;
 });
 
 const isFull = computed(() => {
-  if (!registrationStatus.value) return false;
-  const spots = registrationStatus.value.remainingSpots;
+  const spots = remainingSpots.value;
   return spots !== null && spots <= 0;
 });
 
-const handleRegister = async () => {
-  clearError();
-  const result = await register(eventId);
+const isLowSpots = computed(() => {
+  const spots = remainingSpots.value;
+  return spots !== null && spots > 0 && spots < 10;
+});
 
-  if (result.success) {
-    toast.success(result.message || "Successfully registered for the event.");
-    await fetchRegistrationStatus(eventId);
-  } else {
-    toast.error(result.message || "Registration failed. Please try again.");
+const remainingSpotsText = computed(() => {
+  const spots = remainingSpots.value;
+  const max = maxParticipants.value;
+
+  if (max === null || spots === null) {
+    return null;
+  }
+
+  if (spots <= 0) {
+    return "Full";
+  }
+
+  if (spots < 10) {
+    return `Only ${spots} spots left`;
+  }
+
+  return `${spots} spots available`;
+});
+
+const fetchRegistrationStatus = async () => {
+  if (!eventId.value || !userIsSignedIn) {
+    return;
+  }
+
+  try {
+    const status = await getEventRegistrationStatus(eventId.value);
+    registrationStatus.value = {
+      isRegistered: status.isRegistered,
+      isCreator: status.isCreator,
+      remainingSpots: status.remainingSpots,
+      maxParticipants: status.maxParticipants,
+    };
+  } catch (e) {
+    console.error("Failed to fetch registration status:", e);
+  }
+};
+
+const handleRegister = async () => {
+  if (!eventId.value) return;
+
+  isLoading.value = true;
+  try {
+    const result = await registerForEvent(eventId.value);
+
+    if (result.success) {
+      toast.success(result.message || "Successfully registered for the event.");
+      await fetchRegistrationStatus();
+    } else {
+      toast.error(result.message || "Registration failed. Please try again.");
+    }
+  } catch (e) {
+    toast.error("Registration failed. Please try again.");
+  } finally {
+    isLoading.value = false;
   }
 };
 
 const handleUnregister = async () => {
-  clearError();
-  const result = await unregister(eventId);
+  if (!eventId.value) return;
 
-  if (result.success) {
-    toast.success(result.message || "Successfully cancelled registration.");
-    await fetchRegistrationStatus(eventId);
-  } else {
-    toast.error(result.message || "Cancellation failed. Please try again.");
+  isLoading.value = true;
+  try {
+    const result = await unregisterFromEvent(eventId.value);
+
+    if (result.success) {
+      toast.success(result.message || "Successfully cancelled registration.");
+      await fetchRegistrationStatus();
+    } else {
+      toast.error(result.message || "Cancellation failed. Please try again.");
+    }
+  } catch (e) {
+    toast.error("Cancellation failed. Please try again.");
+  } finally {
+    isLoading.value = false;
   }
 };
 
 watch(
-  () => eventId,
-  async (newEventId) => {
-    if (newEventId && userIsSignedIn) {
-      await fetchRegistrationStatus(newEventId);
+  () => props.event,
+  async (newEvent) => {
+    if (newEvent?.id && userIsSignedIn) {
+      await fetchRegistrationStatus();
+    } else {
+      registrationStatus.value = null;
     }
   },
   { immediate: true }
 );
 
-watch(
-  userIsSignedIn,
-  async (isSignedIn) => {
-    if (isSignedIn && eventId) {
-      await fetchRegistrationStatus(eventId);
-    }
+watch(userIsSignedIn, async (isSignedIn) => {
+  if (isSignedIn && eventId.value) {
+    await fetchRegistrationStatus();
+  } else {
+    registrationStatus.value = null;
   }
-);
+});
 </script>
